@@ -36,8 +36,11 @@
 
 #### a. generate the scripts
 
-    python 
-#### b. run the 
+    for i in `cat samples.txt`; do python create-deep-core-mapping-bowtie-mags.py ${i}; done
+   
+#### b. run each of the bash scripts created by the above script. NOTE: This will likely take up a lot of disk space, so be conscious of this and delete intermediate files as needed. Here is how to run one of the scripts created above
+
+    sbatch 
 
 
 
