@@ -15,14 +15,14 @@
 ####  JGI PROJECT: Combining high resolution organic matter characterization and microbial meta-omics to assess the effects of nutrient loading on salt marsh carbon sequestration JGI LINK: https://genome.jgi.doe.gov/portal/Comhiguestration/Comhiguestration.info.html JGI PROJECT ID: 503576
 
 
-## 2. fix the deflines of each assembly fasta, build a contigs database, and run hmms on the datbase. The samples.txt file can be found in this git. I call the sbatch script below "x_gen-contigs-and-bowtie.shx".
+## 2. fix the deflines of each assembly fasta, build a contigs database, and run hmms on the datbase. The x_samples.txt file can be found in this git. I call the sbatch script below "x_gen-contigs-and-bowtie.shx".
 
     #!/bin/bash
     #SBATCH --nodes=1
     #SBATCH --time=01:00:00
     #SBATCH --partition=express
     #SBATCH --array=1-55
-    ASSEMBLY=$(sed -n "$SLURM_ARRAY_TASK_ID"p samples.txt)
+    ASSEMBLY=$(sed -n "$SLURM_ARRAY_TASK_ID"p x_samples.txt)
  
     anvi-script-reformat-fasta ${ASSEMBLY}-final.contigs.fasta --simplify-names -o ${ASSEMBLY}_filter_contigs.fa -l 2500
     anvi-gen-contigs-database -f ASSEMBLIES/${ASSEMBLY}_filter_contigs.fa -o ASSEMBLIES/${ASSEMBLY}.db
@@ -46,8 +46,20 @@
 
     sbatch SW1601-10_mapping.shx
 
-## 4. Profile all of the 
+## 4. Merge each of the profile dbs for each of the samples.
 
+    #!/bin/bash
+    #SBATCH --nodes=1
+    #SBATCH --time=01:00:00
+    #SBATCH --partition=express
+    #SBATCH --array=1-55
+    ASSEMBLY=$(sed -n "$SLURM_ARRAY_TASK_ID"p x_samples.txt)
+ 
+    anvi-merge -c ${ASSEMBLY}/${ASSEMBLY}.db ${ASSEMBLY}/*PROFILE/PROFILE.db -o ${ASSEMBLY}/${ASSEMBLY}-MERGED
+
+## 5. Run Concoct on the merged profile database 
+
+    
 
 
     
