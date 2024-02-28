@@ -25,10 +25,19 @@
     ASSEMBLY=$(sed -n "$SLURM_ARRAY_TASK_ID"p samples.txt)
  
     anvi-script-reformat-fasta ${ASSEMBLY}-final.contigs.fasta --simplify-names -o ${ASSEMBLY}_filter_contigs.fa -l 2500
-    anvi-gen-contigs-database -f ASSEMBLIES/${ASSEMBLY}_filter_contigs.fa -o ASSEMBLIES/${ASSEMBLY}_filter_contigs.db
-    anvi-run-hmms -c ASSEMBLIES/${ASSEMBLY}_filter_contigs.db
+    anvi-gen-contigs-database -f ASSEMBLIES/${ASSEMBLY}_filter_contigs.fa -o ASSEMBLIES/${ASSEMBLY}.db
+    anvi-run-hmms -c ASSEMBLIES/${ASSEMBLY}.db -T 30
+    anvi-run-ncbi-cogs -c ${SAMPLE}/${SAMPLE}.db -T 40 --cog-data-dir /work/jennifer.bowen/JOE/DBs/ANVIO-COG-db/
+    anvi-run-pfams -c ${SAMPLE}/${SAMPLE}.db -T 40 --pfam-data-dir /work/jennifer.bowen/JOE/DBs/ANVIO-Pfam-db/
+    anvi-run-kegg-kofams -c ${SAMPLE}/${SAMPLE}.db --kegg-data-dir /work/jennifer.bowen/JOE/DBs/ANVIO-KEGG-kofams-db/ -T 20
+    bowtie2-build -f ASSEMBLIES/${ASSEMBLY}_filter_contigs.fa ASSEMBLIES/${ASSEMBLY}_filter_contigs
 
-##  3. Map the reads from each of the metagenomic samples to each of the assemblies using bowtie, generate a filtered bam file that includes only the reads that mapped, and generate a profile database.
+##  3. Map the reads from each of the metagenomic samples to each of the assemblies using bowtie, generate a filtered bam file that includes only the reads that mapped, and generate a profile database. To accomplish this, I generate a script for each of the samples and then run them in a way that doesn't overwhelm the server. 
+
+#### a. generate the scripts
+
+    python 
+#### b. run the 
 
 
 
