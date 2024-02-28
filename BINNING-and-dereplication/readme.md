@@ -15,7 +15,7 @@
 ####  JGI PROJECT: Combining high resolution organic matter characterization and microbial meta-omics to assess the effects of nutrient loading on salt marsh carbon sequestration JGI LINK: https://genome.jgi.doe.gov/portal/Comhiguestration/Comhiguestration.info.html JGI PROJECT ID: 503576
 
 
-## 2. fix the deflines of each assembly fasta, build a contigs database, and run hmms on the datbase. The samples.txt file can be found in this git.
+## 2. fix the deflines of each assembly fasta, build a contigs database, and run hmms on the datbase. The samples.txt file can be found in this git. I call the sbatch script below "x_gen-contigs-and-bowtie.shx".
 
     #!/bin/bash
     #SBATCH --nodes=1
@@ -32,6 +32,10 @@
     anvi-run-kegg-kofams -c ${SAMPLE}/${SAMPLE}.db --kegg-data-dir /work/jennifer.bowen/JOE/DBs/ANVIO-KEGG-kofams-db/ -T 20
     bowtie2-build -f ASSEMBLIES/${ASSEMBLY}_filter_contigs.fa ASSEMBLIES/${ASSEMBLY}_filter_contigs
 
+### execute the script using your slurm scheduler "shown below". If you don't have a slurm scheduler, you will need to alter pretty much everyting in this document.
+
+    sbatch x_gen-contigs-and-bowtie.shx
+
 ##  3. Map the reads from each of the metagenomic samples to each of the assemblies using bowtie, generate a filtered bam file that includes only the reads that mapped, and generate a profile database. To accomplish this, I generate a script for each of the samples and then run them in a way that doesn't overwhelm the server. 
 
 #### a. generate the scripts
@@ -40,7 +44,9 @@
    
 #### b. run each of the bash scripts created by the above script. NOTE: This will likely take up a lot of disk space, so be conscious of this and delete intermediate files as needed. Here is how to run one of the scripts created above
 
-    sbatch 
+    sbatch SW1601-10_mapping.shx
+
+## 4. Profile all of the 
 
 
 
