@@ -17,7 +17,7 @@
                                 
     trimal -in concatenated-proteins-full.fa -out concatenated-proteins-full-trimal.fa
                                 
-#### This is the tree for iqtree
+#### This is the treebuild using iqtree v 2.
 
     #!/bin/bash
     #
@@ -27,4 +27,5 @@
     #SBATCH --mem=50Gb
     #SBATCH --partition=short
 
-    iqtree -s concatenated-proteins-full-trimal.fa -nt 40 -m WAG -bb 1000
+    iqtree -s concatenated-proteins-full-trimal.fa -nt 40 -m WAG -bb 1000 -o concatenated-proteins-full-trimal.tre
+    
