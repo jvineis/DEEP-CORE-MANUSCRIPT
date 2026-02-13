@@ -27,6 +27,7 @@
     anvi-script-reformat-fasta ${ASSEMBLY}-final.contigs.fasta --simplify-names -o ${ASSEMBLY}_filter_contigs.fa -l 2500
     anvi-gen-contigs-database -f ASSEMBLIES/${ASSEMBLY}_filter_contigs.fa -o ASSEMBLIES/${ASSEMBLY}.db
     anvi-run-hmms -c ASSEMBLIES/${ASSEMBLY}.db -T 30
+    anvi-run-scg-taxonomy -c SW1601-110/SW1601-110-new.db -T 30
     anvi-run-ncbi-cogs -c ${SAMPLE}/${SAMPLE}.db -T 40 --cog-data-dir /work/jennifer.bowen/JOE/DBs/ANVIO-COG-db/
     anvi-run-pfams -c ${SAMPLE}/${SAMPLE}.db -T 40 --pfam-data-dir /work/jennifer.bowen/JOE/DBs/ANVIO-Pfam-db/
     anvi-run-kegg-kofams -c ${SAMPLE}/${SAMPLE}.db --kegg-data-dir /work/jennifer.bowen/JOE/DBs/ANVIO-KEGG-kofams-db/ -T 20
@@ -57,7 +58,80 @@
  
     anvi-merge -c ${ASSEMBLY}/${ASSEMBLY}.db ${ASSEMBLY}/*PROFILE/PROFILE.db -o ${ASSEMBLY}/${ASSEMBLY}-MERGED
 
-## 5. Run Concoct on the merged profile database 
+## 5. Estimate the number of genomes contained in each assembly and then run Concoct on the merged profile database using the extimated number of genomes in the "-c" parameter. This must be done separately for each sample. Below is the example for sample SW1601-110 
+
+    anvi-display-contigs-stats SW1601-110/SW1601-110-new.db --report-as-text -o SW1601-110/SW1601-110-new-stats.txt
+
+### This is what the "SW1601-110-new-stat.txt" file looks like. The last two lines of the file show that and evaluation of the bacteria_71 and archaea_76 single copy gene colletions indicate the presence of 116 MAGs in the assembly (99 bacteria and 17 archaea). 
+    
+    contigs_db	SW1601_110_filter_contigs
+    Total Length	231389802
+    Num Contigs	35536
+    Num Contigs > 100 kb	40
+    Num Contigs > 50 kb	255
+    Num Contigs > 20 kb	1454
+    Num Contigs > 10 kb	4535
+    Num Contigs > 5 kb	13159
+    Num Contigs > 2.5 kb	35536
+    Longest Contig	221843
+    Shortest Contig	2500
+    Num Genes (prodigal)	236523
+    L50	6788
+    L75	17291
+    L90	27114
+    N50	7739
+    N75	4166
+    N90	3035
+    Archaea_76	3902
+    Bacteria_71	5936
+    Protista_83	603
+    Ribosomal_RNA_12S	0
+    Ribosomal_RNA_16S	66
+    Ribosomal_RNA_18S	0
+    Ribosomal_RNA_23S	82
+    Ribosomal_RNA_28S	0
+    Ribosomal_RNA_5S	0
+    eukarya (Protista_83)	0
+    bacteria (Bacteria_71)	99
+    archaea (Archaea_76)	17
+
+### Now we are ready to run concoct, providing and estimate of 116 MAGs as an estimate. 
+   
+    #!/bin/bash
+    #SBATCH --nodes=1 
+    #SBATCH --time=12:00:00
+    #SBATCH --partition=short
+    #SBATCH --tasks-per-node=20
+    #SBATCH --mem=20GB
+    
+    concoct --composition_file SW1601-110-splits-and-coverage.txt/SW1601_110_MERGED-SPLITS.fa --coverage_file SW1601-110-splits-and-coverage.txt/SW1601_110_MERGED-COVs.txt -c 116 -b concoct_output/ --threads 20
+
+### This is how we import the concoct collection into the contigs datbase to aid us in our ability to reconstruct genomes
+### 1. first you need to remove the first line of the concoct clustering data and replace the commas with tabs
+    
+    cd concoct_output/
+    grep -v "contig_id" clustering_gt1000.csv | tr "," '\t' > ../SW1601-110-concoct-clusters-for-anvio.txt
+    awk 'BEGIN {OFS="\t";ORS="\n"} {
+        if ($2 ~ /^[0-9]+(\.[0-9]+)?$/) {
+            $2 = "cbin_" $2
+        }
+        print
+    }' ../SW1601-110-concoct-clusters-for-anvio.txt > fix
+    
+### 2. make sure the file looks ok and then overwrite the original
+
+    mv fix ../SW1601-110-concoct-clusters-for-anvio.txt
+
+### 3. import the collection
+    
+    #!/bin/bash
+    #SBATCH --nodes=1 
+    #SBATCH --time=01:00:00
+    #SBATCH --tasks-per-node=1
+    #SBATCH --mem=1GB
+
+    anvi-import-collection SW1601-110-concoct-clusters-for-anvio.txt -p SW1601-110-MERGED/PROFILE.db -c SW1601-110/SW1601-110-new.db -C CONCOCT
+
 
     
     
