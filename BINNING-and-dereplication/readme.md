@@ -122,7 +122,7 @@
 
     mv fix ../SW1601-110-concoct-clusters-for-anvio.txt
 
-### 3. import the collection
+### 3. Import the collection. Keep in mind that this step was completed separately for each of the 55 assemblies.
     
     #!/bin/bash
     #SBATCH --nodes=1 
@@ -131,6 +131,22 @@
     #SBATCH --mem=1GB
 
     anvi-import-collection SW1601-110-concoct-clusters-for-anvio.txt -p SW1601-110-MERGED/PROFILE.db -c SW1601-110/SW1601-110-new.db -C CONCOCT
+
+## 6. Now we are ready to manually bin each of the 55 assemblies. I have created a vidoe of this step to aid in the understanding of how I manually recruited the contings into bins. This process is very labor intensive and if there are more than 20 samples, it is generally advisable to use several automated binning tools followed by a method to integrate the individual tools into a single collection of bins. However, due to our interest in the potentially novel genomic structures that might exist and the desire to generate the highest quality bins possible, we endeavored to embark on this manual reconstruction process.
+
+    link to video
+
+## 7. Dereplication. Following the manual reconstruction process, we migrated all MAGs to a single directory and used dREP to identify genome populations that were identified in multiple samples and to choose a representative MAG for each of the "duplicated" genomes in our collection.
+
+    #!/bin/bash
+    #
+    #SBATCH --nodes=1
+    #SBATCH --tasks-per-node=20
+    #SBATCH --time=24:00:00
+    #SBATCH --mem=50Gb
+    #SBATCH --partition=short
+
+    dRep dereplicate z_HIGH-QUALITY-DEREP-TEST-OUTPUT -g z_HIGH-QUALITY-FASTA/*.fa -p 40 --set_recursion 3000
 
 
     
