@@ -95,7 +95,7 @@
     bacteria (Bacteria_71)	99
     archaea (Archaea_76)	17
 
-### Now we are ready to run concoct, providing and estimate of 116 MAGs as an estimate. 
+### Now we are ready to run concoct, providing and estimate of 116 MAGs for the -c parameter 
    
     #!/bin/bash
     #SBATCH --nodes=1 
@@ -134,8 +134,8 @@
 
 ## 6. Now we are ready to manually bin each of the 55 assemblies. I have created a vidoe of this step to aid in the understanding of how I manually recruited the contings into bins. This process is very labor intensive and if there are more than 20 samples, it is generally advisable to use several automated binning tools followed by a method to integrate the individual tools into a single collection of bins. However, due to our interest in the potentially novel genomic structures that might exist and the desire to generate the highest quality bins possible, we endeavored to embark on this manual reconstruction process.
 
-    link to video
-
+[Manual Binning with Anvi'o](https://www.youtube.com/watch?v=wNCTNkbmsag)
+    
 ## 7. Dereplication. Following the manual reconstruction process, we migrated all MAGs to a single directory and used dREP to identify genome populations that were identified in multiple samples and to choose a representative MAG for each of the "duplicated" genomes in our collection.
 
     #!/bin/bash
