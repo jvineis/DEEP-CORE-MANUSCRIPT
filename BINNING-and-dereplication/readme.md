@@ -148,6 +148,18 @@
 
     dRep dereplicate z_HIGH-QUALITY-DEREP-TEST-OUTPUT -g z_HIGH-QUALITY-FASTA/*.fa -p 40 --set_recursion 3000
 
+## 8. Dereplication of Patescibacteria. Because the completion scores for all Patescibacteria are below the dRep threshold, we used the taxononmy (based on single copy gene calls) from Anvio to place all Patescibacteria into a single directory and run dereplication with relaxed completion scores. 
+
+    #!/bin/bash
+    #
+    #SBATCH --nodes=1
+    #SBATCH --tasks-per-node=20
+    #SBATCH --time=01:00:00
+    #SBATCH --mem=50Gb
+    #SBATCH --partition=express
+
+    dRep dereplicate z_HIGH-QUALITY-PATESCI-OUTPUT -g z_HIGH-QUALITY-PATESCI-FASTA/*.fa --ignoreGenomeQuality -p 40
+
 
     
     
