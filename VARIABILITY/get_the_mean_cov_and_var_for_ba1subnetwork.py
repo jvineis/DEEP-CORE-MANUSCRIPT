@@ -6,7 +6,7 @@ import sys
 
 
 outfile = open(sys.argv[4], 'w')
-outfile.write("uid"+'\t'+"mean_or_var"+'\t'+"core"+'\t'+"depth")
+outfile.write("uid"+'\t'+"mean_or_var"+'\t')
 # Dictionary of the variability
 var_dict = {}
 # Dictionary of the mean
@@ -18,7 +18,7 @@ for i in open(sys.argv[1], 'r'):
     if "Sal" in x[0]:
         mean_dict[x[0]] = x[0:len(x)]
     else:
-        outfile.write('\t'.join(x)+'\n')
+        outfile.write('\t'.join(x[1:len(x)])+'\n')
 
 # Create the mean dictionary
 for i in open(sys.argv[2], 'r'):
