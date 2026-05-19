@@ -6,7 +6,7 @@ import sys
 
 
 outfile = open(sys.argv[4], 'w')
-outfile.write("uid"+'\t'+"mean_or_var"+'\t')
+outfile.write("uid"+'\t'+"mean_or_var"+'\t'+"MAG"+'\t')
 # Dictionary of the variability
 var_dict = {}
 # Dictionary of the mean
