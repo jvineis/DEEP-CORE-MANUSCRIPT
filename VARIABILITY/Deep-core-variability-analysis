@@ -1,7 +1,23 @@
 ## These are the steps used to analyze the sample specific variabiliy at the level of single nuceltide variants (SNVs) for MAGs grouped into the subsurface core 
 
 ### I was able to visualize the coverage and variability generated for each MAG across samples and color pointw with depth using the R script below. The values for
-### mean coverage and variabilty were obtained from the anvio-summarize function
+### mean coverage and variabilty were obtained from the anvio-summarize function detailed in the "Binning_and_dereplication" section
+
+    library(ggplot2)
+    library(dplyr)
+
+
+    dat <- read.table("~/Documents/DEEP-CORE/VARIABILITY/BA1_subnetwork_mags_mean_and_variability_melted_with_tax.txt", header = TRUE, row.names = 1, sep = '\t')
+    pdf("~/Documents/DEEP-CORE/VARIABILITY/BA1_COV_and_VAR_plot.pdf", height = 10, width = 9)
+    ggplot(dat, aes(y = variability, x = mean, fill = depth))+
+    #  geom_smooth(data = dplyr::filter(dat, mean > 15),method = "lm")+
+    #  geom_smooth(data = dplyr::filter(dat, mean < 15),method = "lm")+
+      geom_point(size = 2, shape = 21, color = "black")+
+      facet_wrap(~tax, scales = "free",nrow = 8, ncol=3)+
+      scale_fill_continuous(palette = c("#fff734","#e25d7b","#292f56"))+
+      theme(strip.text = element_text(size =8.5))
+
+    dev.off()
 
 ### Using the profile database and contigs database genrated from the dereplicated set of MAGs, I ran the following command to generate the variability profile
 ### for each of the bins with significant coverage in the two deep cores 
@@ -22,3 +38,4 @@
 
     anvi-gen-variability-profile -c z_ALL-derep-MAGs.db -p z_ALL-derep-MAGs-MERGE/PROFILE.db -C DEFAULT_BINS -b ${SAMPLE} --quince-mode -o VARIABILITY_${SAMPLE}.txt
     anvi-script-snvs-to-interactive VARIABILITY_${SAMPLE}.txt --random 10000 -o VARIABILITY_${SAMPLE}-interactive --force-overwrite
+
