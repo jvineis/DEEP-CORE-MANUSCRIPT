@@ -1,0 +1,24 @@
+## These are the steps used to analyze the sample specific variabiliy at the level of single nuceltide variants (SNVs) for MAGs grouped into the subsurface core 
+
+### I was able to visualize the coverage and variability generated for each MAG across samples and color pointw with depth using the R script below. The values for
+### mean coverage and variabilty were obtained from the anvio-summarize function
+
+### Using the profile database and contigs database genrated from the dereplicated set of MAGs, I ran the following command to generate the variability profile
+### for each of the bins with significant coverage in the two deep cores 
+
+    #!/bin/bash
+    #
+    #SBATCH --nodes=1
+    #SBATCH --cpus-per-task=1
+    #SBATCH --tasks-per-node=1
+    #SBATCH --mem=100Gb
+    #SBATCH --time=10:00:00
+    #SBATCH --array=1-4
+
+    source /projects/jennifer.bowen/JOE/miniconda3/bin/activate
+    conda activate anvio-9
+
+    SAMPLE=$(sed -n "$SLURM_ARRAY_TASK_ID"p x_BA1-subnetwork-MAGs-for-variability.txt)
+
+    anvi-gen-variability-profile -c z_ALL-derep-MAGs.db -p z_ALL-derep-MAGs-MERGE/PROFILE.db -C DEFAULT_BINS -b ${SAMPLE} --quince-mode -o VARIABILITY_${SAMPLE}.txt
+    anvi-script-snvs-to-interactive VARIABILITY_${SAMPLE}.txt --random 10000 -o VARIABILITY_${SAMPLE}-interactive --force-overwrite
