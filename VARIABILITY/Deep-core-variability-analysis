@@ -1,14 +1,36 @@
 ## These are the steps used to analyze the sample specific variabiliy at the level of single nuceltide variants (SNVs) for MAGs grouped into the subsurface core 
 
 ### First I used a custom script in this directory to merege the variability.txt and mean_coverage.txt files produced by the anvio summarize function for just the MAGs in the subsurface core
-### group and then melt the file in R. 
+### group and then melt the file in R and add the taxonomy information so you can make plots for each 
 
-    python get_the_mean_cov_and_var_for_ba1subnetwork.py mean_coverage.txt variability.txt BA1_subnetwork_mags_list.txt BA1_subnetwork_mags_mean_and_variability.txt
+    python get_the_mean_cov_and_var_for_ba1subnetwork.py mean_coverage.txt variability.txt Subsurface-core_mags_list.txt Subsurface-core_mags_mean_and_variability.txt
+
+#### then melt in R
+
+    library(reshape2)
+    dat1 <- read.table("~/Documents/DEEP-CORE/VARIABILITY/Subsurface-core_mags_mean_and_variability.txt", header = TRUE, row.names = 1)
+    ##This will met the dataframe for each sample and MAG with separate rows for mean and variability 
+    mdat1 <- melt(dat1)
+    ## Write the melted data
+    write.table( mdat1,"~/Documents/DEEP-CORE/VARIABILITY/Subsurface-core-mag-mean-and-variability.txt", sep = '\t')
+
+#### After edits, your table will look like this. (note - you need to manually move the variability into a new column
+
+    uid	mean_or_var	MAG	sample	sample	depth	mean	variability
+    1	mean	s_SalMarWE160130MG_2_8859071_Bin_23	SW1601_10	SW1601	10	0.012155224	0.007587925
+    3	mean	s_SalMarSW160130MG_3_8917055_Bin_32_1	SW1601_10	SW1601	10	0.002387642	0
+    5	mean	s_SalMarSW160110MG_4_8867924_Bin_57_1	SW1601_10	SW1601	10	0.012684565	0
+    7	mean	s_SalMarWE160190MG_2_8859115_Bin_1_1	SW1601_10	SW1601	10	0.002928778	0
+
+#### Finally add the taxonomy 
+
+    python 
+
+    
 
 
 
 ### I was able to visualize the coverage and variability generated for each MAG across samples and color point with depth using the R script below. The values for
-### mean coverage and variabilty were obtained from the anvio-summarize function detailed in the "Binning_and_dereplication" section
 
     library(ggplot2)
     library(dplyr)
