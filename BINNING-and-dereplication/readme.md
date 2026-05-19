@@ -160,6 +160,60 @@
 
     dRep dereplicate z_HIGH-QUALITY-PATESCI-OUTPUT -g z_HIGH-QUALITY-PATESCI-FASTA/*.fa --ignoreGenomeQuality -p 40
 
+## 9. Map Metagenomes to the dereplicated MAGs - of course the slum params will need to be edited for each of the different pieces
+
+    #!/bin/bash
+    #
+    #SBATCH --nodes=1
+    #SBATCH --tasks-per-node=1
+    #SBATCH --mem=50Gb
+    #SBATCH --time=01:00:00
+    #SBATCH --partition=short
+    #SBATCH --array=1-55
+
+    SAMPLE=$(sed -n "$SLURM_ARRAY_TASK_ID"p samples-to-run.txt)
+    fastq_file=$( echo "/work/jennifer.bowen/JOE/DEEP-CORE/Filtered_JGI-metaG_reads/${SAMPLE}-METAGENOME.fastq.gz")
+    ### First build the bowtie2 index for the concatenated collection of MAGs
+    bowtie2-build -f z_ALL-derep-MAGs.fa z_ALL-derep-MAGs
+    ## Now use the array to map, filter, and profile each of the metagenomes to the dereplicated set of MAGs
+    bowtie2 -x z_ALL-derep-MAGs -q --interleaved ${fastq_file} -S MAPPING/${SAMPLE}.sam --threads 40
+    samtools view -bS -F 4 MAPPING/${SAMPLE}.sam > MAPPING/${SAMPLE}-FILTERED.bam
+    anvi-init-bam MAPPING/${SAMPLE}-FILTERED.bam -o MAPPING/${SAMPLE}.bam
+    rm MAPPING/${SAMPLE}.sam
+    rm MAPPING/${SAMPLE}-FILTERED.bam
+    anvi-profile -i MAPPING/${SAMPLE}.bam -c z_ALL-derep-MAGs.db -o MAPPING/${SAMPLE}-PROFILE
+
+## 10. Map Metatranscriptomes to the dereplicated MAGs
+    #!/bin/bash
+    #
+    #SBATCH --nodes=1
+    #SBATCH --tasks-per-node=1
+    #SBATCH --mem=1Gb
+    #SBATCH --time=08:00:00
+    #SBATCH --partition=short
+    #SBATCH --array=1-5
+
+    SAMPLE=$(sed -n "$SLURM_ARRAY_TASK_ID"p x_MT-samples.txt)
+    fastq_file=$( echo "/work/jennifer.bowen/Deepcore_MetaT_JGI/${SAMPLE}/QC_Filtered_Raw_Data/${SAMPLE}.filter-MTF.fastq.gz")
+    bowtie2 -x z_ALL-derep-MAGs -q --interleaved ${fastq_file} -S MAPPING/${SAMPLE}.sam --threads 40
+    samtools view -bS -F 4 MAPPING/${SAMPLE}.sam > MAPPING/${SAMPLE}-FILTERED.bam
+    anvi-init-bam MAPPING/${SAMPLE}-FILTERED.bam -o MAPPING/${SAMPLE}.bam
+    rm MAPPING/${SAMPLE}.sam
+    rm MAPPING/${SAMPLE}-FILTERED.bam
+    anvi-profile -i MAPPING/${SAMPLE}.bam -c z_ALL-derep-MAGs.db -o MAPPING/${SAMPLE}-PROFILE
+
+
+## 10. Use anvio to merge and summarize the details of the dereplicated MAGs in the Metatranscriptome and Metagenome
+
+    #!/bin/bash
+    #
+    #SBATCH --nodes=1
+    #SBATCH --tasks-per-node=1
+    #SBATCH --time=08:00:00
+    #SBATCH --mem=10Gb
+    #SBATCH --partition=short
+    anvi-summarize -c z_ALL-derep-MAGs.db -p z_ALL-derep-MAGs-MERGE/PROFILE.db -C DEFAULT_BINS -o z_ALL-derep-MAGs-MERGED-SUMMARY
+    anvi-summarize -c z_ALL-derep-MAGs.db -p z_ALL-derep-MAGs-MT-MERGED/PROFILE.db -C DEFAULT_BINS -o z_ALL-derep-MAGs-MERGED-MT-SUMMARY
 
     
     
