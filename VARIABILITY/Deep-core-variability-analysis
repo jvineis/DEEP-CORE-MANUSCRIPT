@@ -24,13 +24,20 @@
 
 #### Finally add the taxonomy 
 
-    python 
+    python combine_tax_with_melted_data.py subsurface-mags-with-tax.txt Subsurface-core-mag-mean-and-variability.txt Subsurface-core-mag-mean-and-variability-and-tax.txt
 
-    
+#### You will end up with a table that looks like this
+
+    uid	MAG	sample	core	depth	mean	variability	tax
+    1	s_SalMarWE160130MG_2_8859071_Bin_23	SW1601_10	SW1601	10	0.012155224	0.007587925	a17.Bacteroidia.Bacteroidales.VadinHA17
+    3	s_SalMarSW160130MG_3_8917055_Bin_32_1	SW1601_10	SW1601	10	0.002387642	0	a5.Bathyarchaeia.TCS64.TCS64
+    5	s_SalMarSW160110MG_4_8867924_Bin_57_1	SW1601_10	SW1601	10	0.012684565	0	a1.Bathyarchaeia.B26-1.BA1
+    7	s_SalMarWE160190MG_2_8859115_Bin_1_1	SW1601_10	SW1601	10	0.002928778	0	a22.Dehalococcoidia.GIF9.AB-539-J10
 
 
 
-### I was able to visualize the coverage and variability generated for each MAG across samples and color point with depth using the R script below. The values for
+### I was able to visualize the coverage and variability generated for each MAG in the subsurface collection
+### across samples and color point with depth using the R script below. This is the foundation for figure S8.
 
     library(ggplot2)
     library(dplyr)
@@ -67,4 +74,82 @@
 
     anvi-gen-variability-profile -c z_ALL-derep-MAGs.db -p z_ALL-derep-MAGs-MERGE/PROFILE.db -C DEFAULT_BINS -b ${SAMPLE} --quince-mode -o VARIABILITY_${SAMPLE}.txt
     anvi-script-snvs-to-interactive VARIABILITY_${SAMPLE}.txt --random 10000 -o VARIABILITY_${SAMPLE}-interactive --force-overwrite
+
+### At this point, you will have a profile.db, tree.txt, and view.txt file. You can use these to visualize the frequency of departure from the 
+### reference at 10000 randomly chosen locations in the MAG
+
+    anvi-interactive -d view.txt -p profile.db -t tree.txt --manual-mode
+
+### We examined the relationship between variability and 
+    library(ggplot2)
+    library(vegan)
+    library(lme4)
+    library(dplyr)
+
+    # Read in the mean coverage and variability for each MAG - see the previous steps in the git for creation
+    # of this file
+    mdat <- read.table("~/Documents/DEEP-CORE/VARIABILITY/Subsurface-core-mag-mean-and-variability.txt", header = TRUE, row.names = 1)
+    # include only the two deepest cores
+    deep.dat <-filter(mdat, core == "SW1601" | core == "WE1603")
+    # include only samples with more than 15x mean coverage of the MAG
+    deep.dat.min15 <- filter(deep.dat, mean > 15)
+    # include only MAGs with the coverage in both cores and representative samples throughout most of the depth profile 
+    deep.dat.min15.high <- filter(deep.dat.min15, MAG == "s_SalMarSW160130MG_3_8917055_Bin_53" | MAG == "s_SalMarSW160150MG_2_8917613_Bin_36" | MAG == "s_SalMarWE160230MG_3_8858993_Bin_31_1" | MAG == "s_SalMarSW160190MG_3_8917615_Bin_13_1" | MAG == "s_SalMarWE160190MG_2_8859115_Bin_1_1" | MAG == "s_SalMarWE160190MG_2_8859115_Bin_7")
+
+    # analysis of variance to test for a relationship between depth and variability
+    summary(lm(deep.dat.min15.high$variability~deep.dat.min15.high$depth))
+
+
+### We tested for differences in variability with depth and the the SNV frequencies across samples for each MAG.  The steps below provide the details for analysis
+### of one MAG. All others were analyzed in the same manner.
+
+    dat <- read.table("~/Documents/DEEP-CORE/VARIABILITY/ANVIO-VARIABILITY-VISUALIZATION/VARIABILITY_s_SalMarSW160130MG_3_8917055_Bin_53-interactive/view.txt", header = TRUE, row.names = 1)
+
+    mdat <- read.table("~/Documents/DEEP-CORE/VARIABILITY/Subsurface-core-mag-mean-and-variability.txt", header = TRUE, row.names = 1)
+    # include only the two deepest cores
+    deep.dat <-filter(mdat, core == "SW1601" | core == "WE1603")
+    # include only samples with more than 15x mean coverage of the MAG
+    deep.dat.min15 <- filter(deep.dat, mean > 15)
+    # include only MAGs with the coverage in both cores and representative samples throughout most of the depth profile 
+    deep.dat.min15.bin53 <- filter(deep.dat.min15, MAG == "s_SalMarSW160130MG_3_8917055_Bin_53")
+    # collect the sample names in the filtered data for this mag
+    hc_samples <- deep.dat.min15.bin53$sample
+    # filter the dta to include on those samples
+    data_to_keep <- dat[, hc_samples]
+    dat_filtered <- data_to_keep %>%
+      filter(rowSums(across(everything())) != 0)
+
+    # compute the distance matrix from the SNV frequency table
+    dist <- vegdist(t(dat_filtered), method = "bray")
+    # test for differences in dispersion between cores
+    bdisp <- betadisper(dist, group = deep.dat.min15.bin53$core)
+    anova(bdisp)
+
+    # compute the ordination
+    mds_dist <- pco(t(dat_filtered), distance = "bray")
+    # test for difference due to depth and the interaction between depth and core
+    adonis2(vegdist(t(dat_filtered), "bray") ~ depth, data = deep.dat.min15.bin53, permutations = 10000)
+
+    # Plot the ordination
+    pdf("~/Documents/DEEP-CORE/VARIABILITY/ANVIO-VARIABILITY-VISUALIZATION/VARIABILITY_s_SalMarSW160130MG_3_8917055_Bin_53-interactive/bin_53_ordination.pdf")
+    ordiplot(mds_dist, disp = "sites", type = "t")
+    ordihull(mds_dist, deep.dat.min15.bin53$core, label = TRUE)
+    ordispider(mds_dist, deep.dat.min15.bin53$core)
+    points(mds_dist, disp="sites", type = "p", cex=1.5, pch = 21)
+    dev.off()
+
+    # Plot the relationship between variability and depth for each core separately
+    pdf("~/Documents/DEEP-CORE/VARIABILITY/ANVIO-VARIABILITY-VISUALIZATION/VARIABILITY_s_SalMarSW160130MG_3_8917055_Bin_53-interactive/bin_53_point_and_line.pdf", height = 5, width = 4)
+    ggplot(deep.dat.min15.bin53, aes(x= depth, y = variability, fill = core))+
+      geom_point(shape = 21, size = 3)+
+      geom_smooth()+
+      scale_x_reverse()+
+      scale_fill_manual(values = c("blue", "green"))+
+      coord_flip()+
+      theme_minimal()
+    dev.off()
+  
+
+    
+
 
