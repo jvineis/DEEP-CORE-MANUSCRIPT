@@ -29,7 +29,7 @@
 
     iqtree -s concatenated-proteins-full-trimal.fa -nt 40 -m WAG -bb 1000 -o concatenated-proteins-full-trimal.tre
 
-#### We also created a tree using fasttree, which is the tree used for Fig. S2 in the manuscript. The IQ tree and this tree are very similar and do not influence our overall interprettion of the phylogenetic relationships among our MAGs.
+#### We also created a tree using fasttree, which is the tree used for Figure 2-figure supplement 1 in the manuscript. The IQ tree and this tree are very similar and do not influence our overall interprettion of the phylogenetic relationships among our MAGs.
 
     #!/bin/bash
     #
